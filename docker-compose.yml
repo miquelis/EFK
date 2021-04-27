@@ -1,0 +1,74 @@
+version: '3'
+
+services: 
+  
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.12.1
+    container_name: elasticsearch
+    hostname: elasticsearch
+    restart: always
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    environment:
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1    
+    volumes:
+      - ./elasticsearch/data:/usr/share/elasticsearch/data
+    networks:
+      - efk-net  
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.12.1
+    container_name: kibana
+    hostname: kibana
+    restart: always
+    depends_on:
+      - elasticsearch
+    links:
+      - elasticsearch
+    ports:
+      - "5601:5601"      
+    networks:
+      - efk-net  
+
+  fluentd:
+    build: ./fluentd
+    container_name: fluentd
+    hostname: fluentd
+    restart: always
+    volumes:
+      - ./fluentd/conf:/fluentd/etc
+    links:
+      - elasticsearch
+    ports:
+      - "24224:24224"
+      - "24224:24224/udp" 
+    networks:
+      - efk-net
+
+  fakelog:
+    build: ./fakelog
+    logging:
+      driver: fluentd
+      options:
+        fluentd-address: localhost:24224
+        tag: httpd.access
+    links:
+      - fluentd
+    depends_on:
+      - elasticsearch
+      - kibana
+    networks:
+      - efk-net
+
+volumes:
+  elasticsearch:
+
+networks:
+  efk-net:
