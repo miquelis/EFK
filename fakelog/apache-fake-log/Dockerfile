@@ -1,7 +1,7 @@
-FROM python:2.7
+FROM python:3.8.5
 
 WORKDIR /usr/src/app
-COPY ./files/requirements.txt .
+COPY ./requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
-COPY ./files/fakelog.py ./
+COPY ./fakelog.py ./
 CMD [ "python", "./fakelog.py","-n 1000", "-s 1" ]
