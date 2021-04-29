@@ -28,3 +28,4 @@ Vagrantfile
 *.log
 *.gz
 elasticsearch
+.vscode
